@@ -16,21 +16,28 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-
-        Log.d(TAG, "Before runBlocking")
-        runBlocking {
-            launch(Dispatchers.IO) {
-                delay(3000L)
-                Log.d(TAG, "Finished IO Coroutine 1")
+        val job = GlobalScope.launch (Dispatchers.Default) {
+            Log.d(TAG, "Starting long running calculation")
+            withTimeout(3000L) {
+                for(i in 30..40) {
+                    if(isActive) {
+                        Log.d(TAG, "Result for i = $i: ${fib(i)}")
+                    }
+                }
             }
-            launch(Dispatchers.IO) {
-                delay(3000L)
-                Log.d(TAG, "Finished IO Coroutine 2")
-            }
-            Log.d(TAG, "Start of runBlocking")
-            delay(5000L)
-            Log.d(TAG, "End of runBlocking")
+            Log.d(TAG, "Ending long running calculation")
         }
-        Log.d(TAG, "After runBlocking")
+        runBlocking {
+            delay(2000L)
+            job.cancel()
+            Log.d(TAG, "Canceled job...")
+        }
     }
+
+    fun fib(n: Int): Long {
+        return if(n == 0) 0
+        else if (n == 1) 1
+        else fib(n - 1) + fib(n - 2)
+    }
+
 }
